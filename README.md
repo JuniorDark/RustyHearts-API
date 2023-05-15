@@ -1,5 +1,5 @@
 # RustyHearts-API
-[![License](https://img.shields.io/github/license/JuniorDark/RustyHearts-API?color=brown)](LICENSE)
+[![License](https://img.shields.io/github/license/JuniorDark/RustyHearts-API?color=green)](LICENSE)
 
 RustyHearts-API is a Node.js-based REST API that enables authentication, billing, and launcher functionalities for Rusty Hearts.
 
