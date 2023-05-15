@@ -17,7 +17,7 @@ The api currently only support the **usa** (PWE) region.
 - The Launcher API is a web server intended to handle the client connection to the gateserver and for the [Rusty Hearts Launcher](https://github.com/JuniorDark/RustyHearts-Launcher), which handles registration, login, client updates, and processing static elements (public directory). This API must be accessible from the outside and proxied by Nginx or bound to an external IP.
 
 ## Table of Contents
-* [Public folder](#public-folder)
+* [Public folder](#public-folder-description)
 * [Requirements](#requirements)
 * [Deployment](#deployment)
 * [Basic Installation](#basic-installation)
@@ -41,7 +41,7 @@ In order to create client patches, you need to use the `patch` directory of the 
 The tool for creating the patch files is available in the repository: https://github.com/JuniorDark/RustyHearts-MIPTool
 
 ### News panel
-Used to use the html page displayed in the launcher, uses the `news` directory of the api
+Used to display the html page in the [Rusty Hearts Launcher](https://github.com/JuniorDark/RustyHearts-Launcher), uses the `news` directory of the api
 
 ## Requirements
 
@@ -58,10 +58,10 @@ To deploy RustyHearts-API, follow these steps:
 ### Basic Installation
 
 1. Install the latest version of Node.js from the [official website](https://nodejs.org/).
-2. Copy all RustyHearts-API files to a directory of your choice (e.g., **c:\RustyHearts-API**).
+2. Download or clone the repository and copy all RustyHearts-API files to a directory of your choice (e.g., **c:\RustyHearts-API**).
 3. Open a terminal window, navigate to the RustyHearts-API directory, and execute the `npm install` command. Alternatively, you can run the **install.bat** file.
 4. Import the [database file](share/RustyHearts_Account.sql) to your Microsoft SQL Server.
-5. Configure the parameters in the **.env** file.
+5. Configure the parameters in the [**.env**](.env) file.
 6. Start RustyHearts-API servers by executing the `node src/app` command or running the **rh-api.bat** file.
 7. The server region must be set to **usa** on [service_control.xml](share/service_control.xml)
 
@@ -114,9 +114,10 @@ Endpoint | Method | Arguments | Description
 /serverApi/auth | POST | XML with account, password, game and IP | Authenticates a user based on their account information and sends an XML response with their user ID, user type, and success status. If authentication fails, it sends an XML response with a failure status.
 /serverApi/billing | POST | XML with currency-request or item-purchase-request and associated arguments | Handles billing requests. For currency requests, it retrieves the user's Zen balance from the database and sends an XML response with the balance. For item purchase requests, it deducts the cost of the item from the user's Zen balance and logs the transaction in the database. If the transaction is successful, it sends an XML response with the success status. If the transaction fails, it sends an XML response with a failure status and an error message.
 /serverApi/gateway | GET |  | Returns an XML response containing the IP address and port number of the gateway server.
+/serverApi/gatewayInfo | GET |  | Returns an response containing the gateway endpoint. Used by the **chn** region.
 /serverApi/gateway/status | GET |  | Checks the status of the gateway server by attempting to establish a connection to the server. Returns a JSON object with the status of the server (online or offline) and an HTTP status code indicating the success or failure of the connection attempt.
 /accountApi/register | POST | windyCode, email, password | Create a new account with the provided windyCode, email, and password. The password is first combined with the windyCode to create an MD5 hash, which is then salted and hashed again using bcrypt before being stored in the database. An email confirmation is sent to the provided email address, and a success or error message is returned.
-/accountApi/login | POST | account, password | Authenticates a user account by username or email address and password. Return a token if the authentication is successful (unsued).
+/accountApi/login | POST | account, password | Authenticates a user account in the launcher by username or email address and password. Return a token if the authentication is successful (currently unsued).
 /accountApi/codeVerification | POST | email, verification_code_type, verification_code | Verify a user's email by checking the verification code
 /accountApi/sendPasswordResetEmail | POST | email | Sends an email with a password reset verification code to the specified email address
 /accountApi/changePassword | POST | email, password, verification_code | Change the password of a user's account, given the email and password verification code 
