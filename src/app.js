@@ -94,8 +94,9 @@ app.use((err, req, res, next) => {
 
 // Start server
 const port = process.env.PORT || 3000;
-app.listen(port, '0.0.0.0', () => {
-  logger.info(`API listening on *:${port}`);
-  logger.info(`Auth API listening on 127.0.0.1:${authPort}`);
-  logger.info(`Billing API listening on 127.0.0.1:${billingPort}`);
+const publicIP = process.env.PUBLIC_IP || '0.0.0.0';
+app.listen(port, publicIP, () => {
+  logger.info(`API listening on ${publicIP}:${port}`);
+  logger.info(`Auth API listening on ${publicIP}:${authPort}`);
+  logger.info(`Billing API listening on ${publicIP}:${billingPort}`);
 });
