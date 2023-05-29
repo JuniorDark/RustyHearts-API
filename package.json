@@ -37,7 +37,7 @@
     "mssql": "^9.1.1",
     "nodemailer": "^6.9.1",
     "winston": "^3.8.2",
-    "xml2js": "^0.5.0"
+    "xml2js": "^0.6.0"
   },
   "engines": {
     "node": ">=18.15.0"
