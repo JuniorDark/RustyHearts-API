@@ -97,6 +97,6 @@ const port = process.env.PORT || 3000;
 const publicIP = process.env.PUBLIC_IP || '0.0.0.0';
 app.listen(port, publicIP, () => {
   logger.info(`API listening on ${publicIP}:${port}`);
-  logger.info(`Auth API listening on ${publicIP}:${authPort}`);
-  logger.info(`Billing API listening on ${publicIP}:${billingPort}`);
+  logger.info(`Auth API listening on 127.0.0.1:${authPort}`);
+  logger.info(`Billing API listening on 127.0.0.1:${billingPort}`);
 });
