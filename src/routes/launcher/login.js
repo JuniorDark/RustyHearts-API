@@ -23,17 +23,17 @@ router.post('/', async (req, res) => {
       return res.status(400).send(error.details[0].message);
     }
 
-    const account = value.account;
-    const password = value.password;
+    const account = req.body.account;
+    const password = req.body.password;
     const userIp = req.ip;
 
     // Check the format of the account identifier
-	if (
-	  !/^[A-Za-z0-9_-]{6,50}$/.test(account) &&
-	  !/^[\w\d._%+-]+@[\w\d.-]+\.[\w]{2,}$/i.test(account)
-	) {
-	  return res.status(400).json({ Result: 'InvalidUsernameFormat' });
-	}
+    if (
+      !/^[a-z0-9_-]{6,50}$/.test(account) &&
+      !/^[\w\d._%+-]+@[\w\d.-]+\.[\w]{2,}$/i.test(account)
+    ) {
+      return res.status(400).json({ Result: 'InvalidUsernameFormat' });
+    }
 
     // Use a prepared statement to retrieve the account information
     const pool = await connAccount;
@@ -51,6 +51,7 @@ router.post('/', async (req, res) => {
         .createHash('md5')
         .update(windyCode + password)
         .digest('hex');
+
       const password_verify_result = await bcrypt.compare(
         md5_password,
         hash
@@ -85,15 +86,13 @@ router.post('/', async (req, res) => {
         });
       }
     } else {
-       return res.status(400).json({ Result: 'AccountNotFound' });
+      return res.status(400).json({ Result: 'AccountNotFound' });
     }
   } catch (error) {
     logger.error(
       '[Account] Launcher Login: Database query failed: ' + error.message
     );
-    return res
-      .status(500)
-      .send('Database query failed: ' + error.message);
+    return res.status(500).send('Login failed. Please try again later.');
   }
 });
 

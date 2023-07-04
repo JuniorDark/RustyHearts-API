@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const net = require('net');
+const { logger } = require('../utils/logger');
 
 // Define the gateway route
 router.get('/', (req, res) => {
@@ -38,14 +39,17 @@ router.get('/status', async (req, res) => {
 
   // Handle the socket events to check the connection status
   socket.on('connect', () => {
+    logger.info(`[Gateway] Connection attempt success from IP: ${req.ip}`);
     res.status(200).json({ status: 'online' });
     socket.destroy();
   });
   socket.on('timeout', () => {
+    logger.warn(`[Gateway] Connection attempt timeout from IP: ${req.ip}`);
     res.status(408).json({ status: 'offline' });
     socket.destroy();
   });
   socket.on('error', () => {
+    logger.error(`[Gateway] Connection failed from IP: ${req.ip}`);
     res.status(503).json({ status: 'offline' });
     socket.destroy();
   });

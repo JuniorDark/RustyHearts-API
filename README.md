@@ -111,19 +111,20 @@ The api provides the following endpoints:
 
 Endpoint | Method | Arguments | Description
 --- | --- | --- | ---
-/serverApi/auth | POST | XML with account, password, game and IP | Authenticates a user based on their account information and sends an XML response with their user ID, user type, and success status. If authentication fails, it sends an XML response with a failure status.
+/serverApi/auth | POST | XML with account, password, game and IP | Authenticates a user game login based on their account information and sends an XML response with their user ID, user type, and success status. If authentication fails, it sends an XML response with a failure status.
 /serverApi/billing | POST | XML with currency-request or item-purchase-request and associated arguments | Handles billing requests. For currency requests, it retrieves the user's Zen balance from the database and sends an XML response with the balance. For item purchase requests, it deducts the cost of the item from the user's Zen balance and logs the transaction in the database. If the transaction is successful, it sends an XML response with the success status. If the transaction fails, it sends an XML response with a failure status and an error message.
 /serverApi/gateway | GET |  | Returns an XML response containing the IP address and port number of the gateway server.
 /serverApi/gateway/info | GET |  | Returns an response containing the gateway endpoint. Used by the **chn** region.
 /serverApi/gateway/status | GET |  | Checks the status of the gateway server by attempting to establish a connection to the server. Returns a JSON object with the status of the server (online or offline) and an HTTP status code indicating the success or failure of the connection attempt.
 /accountApi/register | POST | windyCode, email, password | Create a new account with the provided windyCode, email, and password. The password is first combined with the windyCode to create an MD5 hash, which is then salted and hashed again using bcrypt before being stored in the database. An email confirmation is sent to the provided email address, and a success or error message is returned.
-/accountApi/login | POST | account, password | Authenticates a user account in the launcher by username or email address and password. Return a token if the authentication is successful (currently unsued).
+/accountApi/login | POST | account, password | Authenticates a user account in the launcher by username or email address and password. Return a token if the authentication is successful (token is currently unsued).
 /accountApi/codeVerification | POST | email, verification_code_type, verification_code | Verify a user's email by checking the verification code
 /accountApi/sendPasswordResetEmail | POST | email | Sends an email with a password reset verification code to the specified email address
 /accountApi/changePassword | POST | email, password, verification_code | Change the password of a user's account, given the email and password verification code 
 /accountApi/sendVerificationEmail | POST | email | Sends a verification email to the specified email address.
 /launcherApi/launcherUpdater/getLauncherVersion | GET |  | Returns the version of the launcher by reading the launcher_info.ini file.
-/launcherApi/launcherUpdater/updateLauncherVersion | POST | version | Downloads the new version of the launcher from the launcher_update folder.
+/launcherApi/launcherUpdater/updateLauncherVersion | POST | version | Download the specified launcher versionr from the launcher_update folder.
+/serverApi/onlineCount | GET |  | Returns the number of online players. Returns a JSON object with the count.
 
 ### Preview
 ![image](api.png)

@@ -61,7 +61,7 @@ router.post('/', async (req, res) => {
         }
     } catch (error) {
         logger.error('[Account] Database query failed: ' + error.message);
-        return res.status(500).send('Database query failed: ' + error.message);
+        return res.status(500).send('A error ocourred. Please try again later.');
     }
 });
 

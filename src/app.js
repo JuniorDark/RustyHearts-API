@@ -8,6 +8,7 @@ const cors = require('cors');
 const compression = require('compression');
 const rateLimit = require('express-rate-limit');
 const expressWinston = require('express-winston');
+const moment = require('moment-timezone');
 const { logger } = require('./utils/logger');
 const path = require('path');
 
@@ -22,6 +23,7 @@ const passwordResetEmailRouter = require('./routes/launcher/passwordResetEmail')
 const passwordChangeRouter = require('./routes/launcher/changePassword');
 const verificationEmailRouter = require('./routes/launcher/verificationEmail');
 const launcherUpdaterRouter = require('./routes/launcher/launcherUpdater');
+const onlineCountRouter = require('./routes/onlineCount');
 
 // Set up rate limiter
 const limiter = rateLimit({
@@ -60,6 +62,7 @@ app.use('/accountApi/sendPasswordResetEmail', limiter , passwordResetEmailRouter
 app.use('/accountApi/changePassword', limiter , passwordChangeRouter);
 app.use('/accountApi/sendVerificationEmail', limiter , verificationEmailRouter);
 app.use('/launcherApi/launcherUpdater', launcherUpdaterRouter);
+app.use('/serverApi/onlineCount', limiter , onlineCountRouter);
 
 // Serve static files from public folder
 app.use(express.static('../public'));
@@ -89,12 +92,48 @@ app.use((err, req, res, next) => {
   } else {
     logger.info(err.stack);
   }
-  res.status(500).send('Something went wrong' + err.stack);
+  res.status(500).send('A error ocurred. Try again later.');
 });
+
+// Node.js version
+const nodeVersion = process.version;
+
+// timezone
+const timezone = process.env.TZ || new Date().toLocaleString('en-US', { timeZoneName: 'short' });
+const offsetInMinutes = moment.tz(timezone).utcOffset();
+const offsetHours = Math.floor(Math.abs(offsetInMinutes) / 60);
+const offsetMinutes = Math.abs(offsetInMinutes) % 60;
+const offsetSign = offsetInMinutes >= 0 ? '+' : '-';
+const offsetString = `${offsetSign}${offsetHours.toString().padStart(2, '0')}:${offsetMinutes.toString().padStart(2, '0')}`;
+
+const memoryUsage = process.memoryUsage();
+
+// Function to format bytes as human-readable string
+function formatBytes(bytes) {
+  const units = ['B', 'KB', 'MB', 'GB', 'TB'];
+  if (bytes === 0) {
+    return '0 B';
+  }
+  const i = Math.floor(Math.log2(bytes) / 10);
+  return `${(bytes / Math.pow(1024, i)).toFixed(2)} ${units[i]}`;
+}
 
 // Start server
 const port = process.env.PORT || 3000;
 const publicIP = process.env.PUBLIC_IP || '0.0.0.0';
+
+console.log('--------------------------------------------------');
+console.log(`Rusty Hearts API Version: 1.1`)
+console.log(`Node.js Version: ${nodeVersion}`);
+console.log(`Timezone: ${timezone} (${offsetString})`);
+console.log('Memory Usage:');
+console.log(`  RSS: ${formatBytes(memoryUsage.rss)}`);
+console.log(`  Heap Total: ${formatBytes(memoryUsage.heapTotal)}`);
+console.log(`  Heap Used: ${formatBytes(memoryUsage.heapUsed)}`);
+console.log(`  External: ${formatBytes(memoryUsage.external)}`);
+console.log(`  Array Buffers: ${formatBytes(memoryUsage.arrayBuffers)}`);
+console.log('--------------------------------------------------');
+
 app.listen(port, publicIP, () => {
   logger.info(`API listening on ${publicIP}:${port}`);
   logger.info(`Auth API listening on 127.0.0.1:${authPort}`);

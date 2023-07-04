@@ -12,7 +12,7 @@ const { connAccount } = require('../../utils/dbConfig');
 
 // Joi schema for validating request data
 const schema = Joi.object({
-  windyCode: Joi.string().alphanum().min(1).max(16).required(),
+  windyCode: Joi.string().alphanum().min(6).max(16).required(),
   email: Joi.string().email().required(),
   password: Joi.string().min(6).required(),
 });
@@ -29,6 +29,13 @@ router.post('/', async (req, res) => {
     const email = value.email;
     const password = value.password;
     const userIp = req.ip;
+	
+	if (
+      !/^[a-z0-9_-]{6,50}$/.test(windyCode) &&
+      !/^[\w\d._%+-]+@[\w\d.-]+\.[\w]{2,}$/i.test(email)
+    ) {
+      return res.status(400).send('InvalidUsernameFormat');
+    }
 
     const md5_password = crypto.createHash('md5').update(windyCode + password).digest('hex'); // Generate MD5 hash
 
@@ -55,12 +62,12 @@ router.post('/', async (req, res) => {
 
       return res.status(200).send('Success');
     } else {
-      accountLogger.info(`[Account] Account [${windyCode}] creation failed: ${row.Result}`);
+      accountLogger.error(`[Account] Account [${windyCode}] creation failed: ${row.Result}`);
       return res.status(400).send(row.Result);
     }
   } catch (error) {
     logger.error('[Account] Database query failed: ' + error.message);
-    return res.status(500).send('Database query failed: ' + error.message);
+    return res.status(500).send('A error ocourred. Please try again later.');
   }
 });
 

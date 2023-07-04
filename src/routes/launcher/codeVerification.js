@@ -46,7 +46,7 @@ router.post('/', async (req, res) => {
         return res.status(200).send(row.Result);
     } catch (error) {
         logger.error('Database query failed: ' + error.message);
-        return res.status(500).send('Database query failed: ' + error.message);
+        return res.status(500).send('A error ocourred. Please try again later.');
     }
 });
 

@@ -100,8 +100,8 @@ router.post('/', async (req, res) => {
     }
 
   } catch (error) {
-    logger.error('[Account] Database query failed: ' + error.message);
-    return res.status(500).send('[Account] Database query failed: ' + error.message);
+    logger.error('[Account] A error ocourred: ' + error.message);
+    return res.status(500).send('A error ocourred. Please try again later.');
   }
 });
 

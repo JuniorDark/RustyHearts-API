@@ -57,7 +57,7 @@ router.post('/', async (req, res) => {
             return res.status(200).send('EmailSent');
 			}
 			else {
-            accountLogger.info(`[Account] Failed to insert verification code for email: ${email}`);
+            accountLogger.error(`[Account] Failed to insert verification code for email: ${email}`);
             return res.status(500).send(insertRow.Result);
 			}
         } else if (row && row.Result === 'AccountNotFound') {
@@ -67,7 +67,7 @@ router.post('/', async (req, res) => {
         }
     } catch (error) {
         logger.error('[Account] Database query failed: ' + error.message);
-        return res.status(500).send('Database query failed: ' + error.message);
+        return res.status(500).send('A error ocourred. Please try again later.');
     }
 });
 
