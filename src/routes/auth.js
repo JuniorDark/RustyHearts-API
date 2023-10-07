@@ -1,5 +1,5 @@
 const express = require('express');
-const bcrypt = require('bcrypt');
+const bcrypt = require('bcryptjs');
 const xml2js = require('xml2js');
 const sql = require('mssql');
 const Joi = require('joi');

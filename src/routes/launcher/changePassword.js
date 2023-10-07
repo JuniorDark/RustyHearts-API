@@ -1,7 +1,7 @@
 const sql = require('mssql');
 const express = require('express');
 const router = express.Router();
-const bcrypt = require('bcrypt');
+const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
 const { logger, accountLogger } = require('../../utils/logger');
 const { sendPasswordChangedEmail } = require('../../mailer/mailer');

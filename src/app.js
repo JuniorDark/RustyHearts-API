@@ -134,6 +134,27 @@ console.log(`  External: ${formatBytes(memoryUsage.external)}`);
 console.log(`  Array Buffers: ${formatBytes(memoryUsage.arrayBuffers)}`);
 console.log('--------------------------------------------------');
 
+// Function to log memory usage
+function logMemoryUsage() {
+  const now = new Date();
+  const formattedDateTime = moment(now).format('YYYY-MM-DD HH:mm:ss');
+
+  const memoryUsage = process.memoryUsage();
+
+  console.log(`Memory Usage at ${formattedDateTime}:`);
+  console.log(`  RSS          : ${formatBytes(memoryUsage.rss)}`);
+  console.log(`  Heap Total   : ${formatBytes(memoryUsage.heapTotal)}`);
+  console.log(`  Heap Used    : ${formatBytes(memoryUsage.heapUsed)}`);
+  console.log(`  External     : ${formatBytes(memoryUsage.external)}`);
+  console.log(`  Array Buffers: ${formatBytes(memoryUsage.arrayBuffers)}`);
+  console.log('--------------------------------------------------');
+}
+
+// Log memory usage every 10 minutes (600000 milliseconds)
+const memoryLogInterval = 600000;
+
+setInterval(logMemoryUsage, memoryLogInterval);
+
 app.listen(port, publicIP, () => {
   logger.info(`API listening on ${publicIP}:${port}`);
   logger.info(`Auth API listening on 127.0.0.1:${authPort}`);
