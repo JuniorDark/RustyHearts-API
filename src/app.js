@@ -83,6 +83,7 @@ app.get('/favicon.ico', (req, res) => {
 app.use('/launcher/news/images', express.static(path.join(__dirname, '../public/launcher/news/images')));
 app.use('/launcher/news', express.static(path.join(__dirname, '../public/launcher/news')));
 app.use('/launcher/patch', express.static(path.join(__dirname, '../public/launcher/patch')));
+app.use('/launcher/client', express.static(path.join(__dirname, '../public/launcher/client')));
 
 
 // Set up error handling middleware
@@ -123,7 +124,7 @@ const port = process.env.PORT || 3000;
 const publicIP = process.env.PUBLIC_IP || '0.0.0.0';
 
 console.log('--------------------------------------------------');
-console.log(`Rusty Hearts API Version: 1.1`)
+console.log(`Rusty Hearts API Version: 1.2`)
 console.log(`Node.js Version: ${nodeVersion}`);
 console.log(`Timezone: ${timezone} (${offsetString})`);
 console.log('Memory Usage:');
@@ -150,8 +151,8 @@ function logMemoryUsage() {
   console.log('--------------------------------------------------');
 }
 
-// Log memory usage every 10 minutes (600000 milliseconds)
-const memoryLogInterval = 600000;
+// Log memory usage every 30 minutes (1800000 milliseconds)
+const memoryLogInterval = 1800000;
 
 setInterval(logMemoryUsage, memoryLogInterval);
 

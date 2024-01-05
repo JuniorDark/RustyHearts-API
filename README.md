@@ -5,6 +5,9 @@ RustyHearts-API is a Node.js-based REST API that enables authentication, billing
 
 The API consists of three independent servers (Auth API, Billing API and Launcher API) running on different ports.
 
+### Preview
+![image](api.png)
+
 ### API region support
 The api currently only support the **usa** (PWE) region.
 
@@ -17,13 +20,13 @@ The api currently only support the **usa** (PWE) region.
 - The Launcher API is a web server intended to handle the client connection to the gateserver and for the [Rusty Hearts Launcher](https://github.com/JuniorDark/RustyHearts-Launcher), which handles registration, login, client updates, and processing static elements (public directory). This API must be accessible from the outside and proxied by Nginx or bound to an external IP.
 
 ## Table of Contents
+* [Preview](#preview)
 * [Public folder](#public-folder-description)
 * [Requirements](#requirements)
 * [Deployment](#deployment)
 * [Basic Installation](#basic-installation)
 * [.env file setup](#env-file-setup)
 * [Available endpoints](#available-endpoints)
-* [Preview](#preview)
 * [License](#license)
 * [Contributing](#contributing)
 * [FAQ](#faq)
@@ -34,6 +37,11 @@ The api currently only support the **usa** (PWE) region.
 ### Launcher self-update
 
 In order for the launcher to automatically update itself, you need to use the launcher_info.ini in the `launcher_update` directory of the api. This file specifies the version of the launcher. After each update of the launcher, you need to change the version in the ini, as well in the launcher executable file.
+
+### Client download
+
+In order to create client download, you need to use the `client` directory of the api.
+The tool for creating the client files is available in the repository: https://github.com/JuniorDark/RustyHearts-MIPTool
 
 ### Client patch
 
@@ -126,9 +134,6 @@ Endpoint | Method | Arguments | Description
 /launcherApi/launcherUpdater/updateLauncherVersion | POST | version | Download the specified launcher versionr from the launcher_update folder.
 /serverApi/onlineCount | GET |  | Returns the number of online players. Returns a JSON object with the count.
 
-### Preview
-![image](api.png)
-
 ## License
 This project is licensed under the terms found in [`LICENSE-0BSD`](LICENSE).
 
@@ -147,6 +152,4 @@ Contributions from the community are welcome! If you encounter a bug or have a f
 If you need help with the api, please submit an issue on GitHub.
 
 ## Roadmap
-* Add support for client download/repair
-* Improve performance and stability
 * Add support for other regions
