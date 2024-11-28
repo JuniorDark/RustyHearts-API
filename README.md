@@ -5,6 +5,10 @@ RustyHearts-API is a Node.js-based REST API that enables authentication, billing
 
 The API consists of three independent servers (Auth API, Billing API and Launcher API) running on different ports.
 
+## Getting Started
+
+Either use `git clone https://github.com/JuniorDark/RustyHearts-API` on the command line to clone the repository or use Code --> Download zip button to get the files.
+
 ### Preview
 ![image](api.png)
 
@@ -28,9 +32,6 @@ The api currently only support the **usa** (PWE) region.
 * [.env file setup](#env-file-setup)
 * [Available endpoints](#available-endpoints)
 * [License](#license)
-* [Contributing](#contributing)
-* [FAQ](#faq)
-* [Support](#support)
 
 ## Public folder description
 
@@ -136,20 +137,3 @@ Endpoint | Method | Arguments | Description
 
 ## License
 This project is licensed under the terms found in [`LICENSE-0BSD`](LICENSE).
-
-## Contributing
-Contributions from the community are welcome! If you encounter a bug or have a feature request, please submit an issue on GitHub. If you would like to contribute code, please fork the repository and submit a pull request.
-
-## FAQ
-* Q: How do I report a bug?
-  * A: Please submit an issue on GitHub with a detailed description of the bug and steps to reproduce it.
-* Q: How do I request a new feature?
-  * A: Please submit an issue on GitHub with a detailed description of the feature and why it would be useful.
-* Q: How do I contribute code?
-  * A: Please fork the repository, make your changes, and submit a pull request.
-  
-## Support
-If you need help with the api, please submit an issue on GitHub.
-
-## Roadmap
-* Add support for other regions
