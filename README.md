@@ -3,25 +3,17 @@
 
 RustyHearts-API is a Node.js-based REST API that enables authentication, billing, and launcher functionalities for Rusty Hearts.
 
-The API consists of three independent servers (Auth API, Billing API and Launcher API) running on different ports.
+The API consists of independent servers (Auth/Billing API and Launcher API) running on different ports.
 
-## Getting Started
-
-Either use `git clone https://github.com/JuniorDark/RustyHearts-API` on the command line to clone the repository or use Code --> Download zip button to get the files.
-
-### Preview
-![image](api.png)
-
-### API region support
-The api currently only support the **usa** (PWE) region.
-
+### API game region support
 * **usa** (PWE) - Full api support
-* **chn** (Xunlei) - Only launcher support
+* **jpn** (SEGA) - Full api support
 
-## Server Descriptions
+### Servers
 
-- The Auth API is responsible for in-game authentication, while the Billing API manages the shop's zen balance and purchases. It is essential to bind the Auth/Billing API only to a local IP address and prevent external access to these APIs.
-- The Launcher API is a web server intended to handle the client connection to the gateserver and for the [Rusty Hearts Launcher](https://github.com/JuniorDark/RustyHearts-Launcher), which handles registration, login, client updates, and processing static elements (public directory). This API must be accessible from the outside and proxied by Nginx or bound to an external IP.
+- **Launcher API**: The Launcher API is as a web server intended to handle the client connection to the gateserver and for the [Rusty Hearts Launcher](https://github.com/JuniorDark/RustyHearts-Launcher), which handles account registration, login, client updates, and processing static elements (public directory). This API must be accessible from the outside and proxied by Nginx or bound to an external IP.
+- **Auth/Billing API (USA)/(JPN)**: This API is responsible for in-game authentication and handle the shop balance and purchases. It is recommended to bind this API only to a local IP address and prevent external access to these APIs.
+- **Proxy (JPN)**: This server is used as a proxy to receive the request with malformed headers send from the game server, and forward it fixed to the Auth/Billing API. 
 
 ## Table of Contents
 * [Preview](#preview)
@@ -32,6 +24,9 @@ The api currently only support the **usa** (PWE) region.
 * [.env file setup](#env-file-setup)
 * [Available endpoints](#available-endpoints)
 * [License](#license)
+
+### Preview
+![image](api.png)
 
 ## Public folder description
 
@@ -71,22 +66,29 @@ To deploy RustyHearts-API, follow these steps:
 3. Open a terminal window, navigate to the RustyHearts-API directory, and execute the `npm install` command. Alternatively, you can run the **install.bat** file.
 4. Import the [database file](share/RustyHearts_Account.sql) to your Microsoft SQL Server.
 5. Configure the parameters in the [**.env**](.env) file.
-6. Start RustyHearts-API servers by executing the `node src/app` command or running the **rh-api.bat** file.
-7. The server region must be set to **usa** on [service_control.xml](share/service_control.xml)
+6. Start RustyHearts-API servers by running the file **start-JPN** or **start-USA** file.
+7. Set the server region to **usa** or **jpn** on [service_control.xml](share/service_control.xml)
 
 ## .env file setup:
 
 ### API CONFIGURATION
 
-- **PORT**: The port number for receiving connections (default 3000).
-- **AUTH_PORT**: The port number for the Auth API.
-- **BILLING_PORT**: The port number for the Billing API.
-- **ENABLE_HELMET**: Determines whether the helmet middleware is enabled or disabled. If enabled, https need to be used for the api.
+- **API_LISTEN_HOST**: The host for receiving connections from the users for access public/launcher functions. Use `0.0.0.0` or leave empty to bind API on all IPs.
+- **API_LISTEN_PORT**: The port number for receiving connections from the users for access public/launcher functions (default 80).
+- **API_LOCAL_LISTEN_HOST**: The host for receiving connections from the GameGatewayServer/ManagerServer servers (Rusty Hearts Servers) for the auth/billing functions. Use `127.0.0.1` (recommended) or `0.0.0.0` to bind API on all IPs (not recommended!).
+- **API_USA_PORT**: The port number for receiving connections from the GameGatewayServer/ManagerServer servers (Rusty Hearts Servers) for the auth/billing functions for the usa region.
+- **API_JPN_PORT**: The port number for receiving connections from the GameGatewayServer/ManagerServer servers (Rusty Hearts Servers) for the auth/billing functions for the jpn region.
+- **API_PROXY_PORT**: The port number for receiving connections from the GameGatewayServer/ManagerServer servers (Rusty Hearts Servers) for the auth/billing functions for the jpn region. This port is used to receive requests with malformed headers and forward them to the Auth/Billing API. 
+- **API_TRUSTPROXY_ENABLE**: Allow determination of client IP address based on `X-Forwarded-For` header. Must be enabled if a reverse proxy is used.
+- **API_TRUSTPROXY_HOSTS**: List of IP addresses or subnets that should be trusted as a reverse proxy. Multiple entries can be listed separated by commas. If left empty, headers will be accepted from any IP address (not recommended!).
+- **API_SHOP_INITIAL_BALANCE**: The initial balance value of the in-game shop on user registration.
+- **API_ENABLE_HELMET**: Determines whether the helmet middleware is enabled or disabled. If enabled, HTTPS needs to be used for the API.
 - **TZ**: The timezone for the server.
 
 ### LOGGING CONFIGURATION
 
-- **LOG_LEVEL**: The level of logging to use (e.g. debug, info, warn, error).
+- **LOG_LEVEL**: The level of logging to use (e.g., debug, info, warn, error).
+- **LOG_IP_ADDRESSES**: Enable logging of IP addresses.
 - **LOG_AUTH_CONSOLE**: Whether to log Auth API messages to the console.
 - **LOG_BILLING_CONSOLE**: Whether to log Billing API messages to the console.
 - **LOG_ACCOUNT_CONSOLE**: Whether to log Account API messages to the console.
@@ -100,40 +102,57 @@ To deploy RustyHearts-API, follow these steps:
 - **DB_PASSWORD**: The password for the database user.
 - **DB_ENCRYPT**: Whether to encrypt the connection to the database.
 
-### GATEWAY API CONFIGURATION
+### GATEWAY CONFIGURATION
 
 - **GATESERVER_IP**: The IP address of the gate server.
 - **GATESERVER_PORT**: The port number of the gate server.
+- **SERVER_ID**: The server/world ID used in the database.
 
 ### EMAIL CONFIGURATION
 
 - **SMTP_HOST**: The hostname or IP address of the SMTP server.
 - **SMTP_PORT**: The port number of the SMTP server.
-- **SMTP_ENCRYPTION**: The encryption protocol to use (e.g. ssl, tls).
+- **SMTP_ENCRYPTION**: The encryption protocol to use (e.g., ssl, tls).
 - **SMTP_USERNAME**: The username for the SMTP server.
 - **SMTP_PASSWORD**: The password for the SMTP server.
-- **SMTP_FROMNAME**: The name to use as the sender in emails.
+- **SMTP_EMAIL_FROM_ADDRESS**: The outgoing mail sender email address.
+- **SMTP_FROM_NAME**: The outgoing mail sender name.
 
 ## Available endpoints
 
-The api provides the following endpoints:
+The API provides the following endpoints:
 
-Endpoint | Method | Arguments | Description
---- | --- | --- | ---
-/serverApi/auth | POST | XML with account, password, game and IP | Authenticates a user game login based on their account information and sends an XML response with their user ID, user type, and success status. If authentication fails, it sends an XML response with a failure status.
-/serverApi/billing | POST | XML with currency-request or item-purchase-request and associated arguments | Handles billing requests. For currency requests, it retrieves the user's Zen balance from the database and sends an XML response with the balance. For item purchase requests, it deducts the cost of the item from the user's Zen balance and logs the transaction in the database. If the transaction is successful, it sends an XML response with the success status. If the transaction fails, it sends an XML response with a failure status and an error message.
-/serverApi/gateway | GET |  | Returns an XML response containing the IP address and port number of the gateway server.
-/serverApi/gateway/info | GET |  | Returns an response containing the gateway endpoint. Used by the **chn** region.
-/serverApi/gateway/status | GET |  | Checks the status of the gateway server by attempting to establish a connection to the server. Returns a JSON object with the status of the server (online or offline) and an HTTP status code indicating the success or failure of the connection attempt.
-/accountApi/register | POST | windyCode, email, password | Create a new account with the provided windyCode, email, and password. The password is first combined with the windyCode to create an MD5 hash, which is then salted and hashed again using bcrypt before being stored in the database. An email confirmation is sent to the provided email address, and a success or error message is returned.
-/accountApi/login | POST | account, password | Authenticates a user account in the launcher by username or email address and password. Return a token if the authentication is successful (token is currently unsued).
-/accountApi/codeVerification | POST | email, verification_code_type, verification_code | Verify a user's email by checking the verification code
-/accountApi/sendPasswordResetEmail | POST | email | Sends an email with a password reset verification code to the specified email address
-/accountApi/changePassword | POST | email, password, verification_code | Change the password of a user's account, given the email and password verification code 
-/accountApi/sendVerificationEmail | POST | email | Sends a verification email to the specified email address.
-/launcherApi/launcherUpdater/getLauncherVersion | GET |  | Returns the version of the launcher by reading the launcher_info.ini file.
-/launcherApi/launcherUpdater/updateLauncherVersion | POST | version | Download the specified launcher versionr from the launcher_update folder.
-/serverApi/onlineCount | GET |  | Returns the number of online players. Returns a JSON object with the count.
+### Launcher API
+
+Endpoint | Method | Arguments | Content Type | Description
+--- | ---  | --- | --- | ---
+/Register | - | -| - | A basic web page for account registration and password change. |
+/launcher/GetGatewayAction | GET  | - | XML | Returns the gateway server's IP and port in XML format used by the client to connect to the server.
+/launcher/SignupAction | POST | `userName`, `email`, `password`, `verificationCode`| Form URL Encoded | Registers a new user account.
+/launcher/LoginAction | POST | `account`, `password` | Form URL Encoded | Authenticates a user by username/email and returns a token if successful. |
+/launcher/ResetPasswordAction | POST | `email`, `password`, `verificationCode` | Form URL Encoded | Resets a user's password using a verification code. |
+/launcher/SendPasswordResetEmailAction | POST | `email` | Form URL Encoded | Sends a email with a verification code for password reset to the specified address. |
+/launcher/SendVerificationEmailAction | POST | `email` | Form URL Encoded | Sends a email with a verification code for account creation reset to the specified address. |
+/launcher/VerifyCodeAction | POST | `email`, `verificationCodeType`, `verificationCode` | Form URL Encoded | Validates a verification code. `verificationCodeType`: `Account`, `Password` |
+/launcher/LauncherAction/getLauncherVersion | GET | - | JSON | Returns the version of the launcher specified in the launcher_info.ini file. |
+/launcher/LauncherAction/updateLauncherVersion | POST | `version` | Form URL Encoded | Download the specified launcher version from the launcher_update folder. |
+launcher/GetOnlineCountAction | GET  | - | JSON | Returns the number of current online players. |
+
+### Auth/Billing API (USA)
+
+Endpoint | Method | Arguments | Content Type | Description
+--- | ---  | --- | --- | ---
+/Auth | POST | `<login-request><account>account</account><password>account + password in md5</password><game>16</game><ip>ip</ip></login-request>`| XML | Authenticates a user in the client by username and password. The password must be hashed using MD5. The game ID is always 16 for the USA region. |
+/Billing | POST | `<currency-request><userid>account</userid><game>1000</game><server>serverId</server></currency-request>` | XML | Returns the shop balance of the user account. The game ID is always 1000 for the USA region. |
+/Billing | POST | `<item-purchase-request><userid>account</userid><charid>character GUID</charid><game>1000</game><server>serverId</server><amount>itemPrice</amount><itemid>itemid</itemid><count>itemCount</count><uniqueid>Transaction GUID</uniqueid></item-purchase-request>` | XML | Purchases an item from the shop. The game ID is always 1000 for the USA region. The server ID is the same as the one used in the Auth API. The item ID is the same as the one used in the shop. The transaction GUID is a unique identifier for the purchase. |
+
+ ### Auth/Billing API (JPN)
+
+Endpoint | Method | Arguments | Content Type | Description
+--- | ---  | --- | --- | ---
+/Auth/cgi-bin/auth_rest_oem.cgi | POST | `service_id`, `product_name`, `original_id`, `original_password`| Form URL Encoded | authenticates a user in the client by username and password. service_id is always `FFFFFFFFFFFFFFFFFF` for the JPN region. The product_name is always empty. |
+/Billing/S1/ApiPointTotalGetS.php | POST | `product_name`, `original_id`, `original_password`, `auto_charge_exec` | Form URL Encoded | Returns the shop balance of the user account. The auto_charge_exec is always 0. |
+/Billing/S1/ApiPointMoveS.php | POST | `product_name`, `original_id`, `original_password`, `auto_charge_exec`, `move_point`, ` move_kind`, `item_code` | Form URL Encoded | Purchases an item from the shop. `move_kind` is always 06. `move_point` is the cost of the item `-200`. The `item_code` format is `rsty0000000000001`, where the first 10 digits are the item shopID and the last 3 digits are always `001`. | 
 
 ## License
 This project is licensed under the terms found in [`LICENSE-0BSD`](LICENSE).

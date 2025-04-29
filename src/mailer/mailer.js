@@ -1,18 +1,24 @@
-const nodemailer = require('nodemailer');
-const handlebars = require('handlebars');
-const fs = require('fs');
-const path = require('path');
-const { mailerLogger } = require('../utils/logger');
+import { createTransport } from 'nodemailer';
+import handlebars from 'handlebars';
+import { readFileSync } from 'fs';
+import { logger, mailerLogger } from '../utils/logger.js';
+import path from 'path';
+import config from '../config.js';
+const { mailer } = config;
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
 
-// Load the email templates
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+// Load and compile email templates
 const emailTemplates = {
-  confirmation: fs.readFileSync(path.join(__dirname, 'templates', 'confirmationTemplate.hbs'), 'utf-8'),
-  verification: fs.readFileSync(path.join(__dirname, 'templates', 'verificationTemplate.hbs'), 'utf-8'),
-  passwordReset: fs.readFileSync(path.join(__dirname, 'templates', 'passwordResetTemplate.hbs'), 'utf-8'),
-  passwordChanged: fs.readFileSync(path.join(__dirname, 'templates', 'passwordChangedTemplate.hbs'), 'utf-8')
+  confirmation: readFileSync(path.join(__dirname, 'templates', 'confirmationTemplate.hbs'), 'utf-8'),
+  verification: readFileSync(path.join(__dirname, 'templates', 'verificationTemplate.hbs'), 'utf-8'),
+  passwordReset: readFileSync(path.join(__dirname, 'templates', 'passwordResetTemplate.hbs'), 'utf-8'),
+  passwordChanged: readFileSync(path.join(__dirname, 'templates', 'passwordChangedTemplate.hbs'), 'utf-8')
 };
 
-// Compile the email templates
 const compiledTemplates = {
   confirmation: handlebars.compile(emailTemplates.confirmation),
   verification: handlebars.compile(emailTemplates.verification),
@@ -20,23 +26,47 @@ const compiledTemplates = {
   passwordChanged: handlebars.compile(emailTemplates.passwordChanged)
 };
 
-// SMTP transport configuration
-const transporter = nodemailer.createTransport({
-    host: process.env.SMTP_HOST,
-    port: process.env.SMTP_PORT,
-    secure: process.env.SMTP_ENCRYPTION === 'ssl' || process.env.SMTP_ENCRYPTION === 'tls',
-    auth: {
-      user: process.env.SMTP_USERNAME,
-      pass: process.env.SMTP_PASSWORD
-    }
-  });
+// Check for required environment variables
+function isMailerConfigured() {
+  const requiredEnvVars = [
+    'SMTP_HOST',
+    'SMTP_PORT',
+    'SMTP_ENCRYPTION',
+    'SMTP_USERNAME',
+    'SMTP_PASSWORD',
+    'SMTP_FROM_NAME'
+  ];
 
+  const missing = requiredEnvVars.filter(key => !process.env[key]);
+  if (missing.length) {
+    logger.warn(`[Mailer] SMTP server is not configured. Missing environment variables: ${missing.join(', ')}`);
+    return false;
+  }
+  return true;
+}
+
+// Create transporter
+function getTransporter() {
+  return createTransport({
+    host: mailer.host,
+    port: Number(mailer.port),
+    secure: mailer.secure,
+    auth: {
+      user: mailer.auth.user,
+      pass: mailer.auth.pass
+    },
+  });
+}
+
+// Email send functions
 function sendConfirmationEmail(email, windyCode) {
-  const template = compiledTemplates.confirmation;
-  const emailContent = template({ windyCode });
+  if (!isMailerConfigured()) return;
+
+  const transporter = getTransporter();
+  const emailContent = compiledTemplates.confirmation({ windyCode });
 
   const mailOptions = {
-	from: `"${process.env.SMTP_FROMNAME}" <${process.env.SMTP_USERNAME}>`,
+    from: `"${process.env.SMTP_FROM_NAME}" <${process.env.SMTP_EMAIL_FROM_ADDRESS}>`,
     to: email,
     subject: '[Rusty Hearts] Account Creation Confirmation',
     html: emailContent
@@ -44,19 +74,21 @@ function sendConfirmationEmail(email, windyCode) {
 
   transporter.sendMail(mailOptions, (error, info) => {
     if (error) {
-	mailerLogger.error('[Mailer] Error sending confirmation email: ' + error.message);
+      mailerLogger.error('[Mailer] Error sending confirmation email: ' + error.message);
     } else {
-	  mailerLogger.info('[Mailer] Confirmation email sent: ' + info.response);
+      mailerLogger.info('[Mailer] Confirmation email sent: ' + info.response);
     }
   });
 }
 
 function sendVerificationEmail(email, verificationCode) {
-  const template = compiledTemplates.verification;
-  const emailContent = template({ verificationCode });
+  if (!isMailerConfigured()) return;
+
+  const transporter = getTransporter();
+  const emailContent = compiledTemplates.verification({ verificationCode });
 
   const mailOptions = {
-    from: `"${process.env.SMTP_FROMNAME}" <${process.env.SMTP_USERNAME}>`,
+    from: `"${process.env.SMTP_FROM_NAME}" <${process.env.SMTP_EMAIL_FROM_ADDRESS}>`,
     to: email,
     subject: '[Rusty Hearts] Account Creation',
     html: emailContent
@@ -72,11 +104,13 @@ function sendVerificationEmail(email, verificationCode) {
 }
 
 function sendPasswordResetEmail(email, verificationCode) {
-  const template = compiledTemplates.passwordReset;
-  const emailContent = template({ verificationCode });
+  if (!isMailerConfigured()) return;
+
+  const transporter = getTransporter();
+  const emailContent = compiledTemplates.passwordReset({ verificationCode });
 
   const mailOptions = {
-    from: `"${process.env.SMTP_FROMNAME}" <${process.env.SMTP_USERNAME}>`,
+    from: `"${process.env.SMTP_FROM_NAME}" <${process.env.SMTP_EMAIL_FROM_ADDRESS}>`,
     to: email,
     subject: '[Rusty Hearts] Password Reset Request',
     html: emailContent
@@ -92,11 +126,13 @@ function sendPasswordResetEmail(email, verificationCode) {
 }
 
 function sendPasswordChangedEmail(email, windyCode) {
-  const template = compiledTemplates.passwordChanged;
-  const emailContent = template({ windyCode });
+  if (!isMailerConfigured()) return;
+
+  const transporter = getTransporter();
+  const emailContent = compiledTemplates.passwordChanged({ windyCode });
 
   const mailOptions = {
-    from: `"${process.env.SMTP_FROMNAME}" <${process.env.SMTP_USERNAME}>`,
+    from: `"${process.env.SMTP_FROM_NAME}" <${process.env.SMTP_EMAIL_FROM_ADDRESS}>`,
     to: email,
     subject: '[Rusty Hearts] Account Password Changed',
     html: emailContent
@@ -111,4 +147,9 @@ function sendPasswordChangedEmail(email, windyCode) {
   });
 }
 
-module.exports = {sendConfirmationEmail, sendVerificationEmail, sendPasswordResetEmail, sendPasswordChangedEmail};
+export {
+  sendConfirmationEmail,
+  sendVerificationEmail,
+  sendPasswordResetEmail,
+  sendPasswordChangedEmail
+};

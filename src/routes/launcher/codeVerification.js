@@ -1,53 +1,63 @@
-const sql = require('mssql');
-const express = require('express');
-const router = express.Router();
-const { logger } = require('../../utils/logger');
-const Joi = require('joi');
-
-// Set up database connection
-const { connAccount } = require('../../utils/dbConfig');
+import { Router } from "express";
+const router = Router();
+import joi from "joi";
+import { logger } from "../../utils/logger.js";
+import { verifyCode } from "../../services/accountDBService.js";
 
 // Joi schema for request body validation
-const schema = Joi.object({
-  email: Joi.string().email().required(),
-  verification_code_type: Joi.string().required(),
-  verification_code: Joi.string().pattern(new RegExp('^[0-9]+$')).required()
+const schema = joi.object({
+  email: joi.string().email().required(),
+  verificationCodeType: joi.string().required(),
+  verificationCode: joi.string().pattern(new RegExp("^[0-9]+$")).required(),
 });
 
-// Route for registering an account
-router.post('/', async (req, res) => {
+router.post("/", async (req, res) => {
   try {
     // Validate request body
     const { error, value } = schema.validate(req.body);
     if (error) {
-      return res.status(400).send(error.details[0].message);
+      return res.status(400).json({
+        success: false,
+        result: "ValidationError",
+        message: error.details[0].message,
+      });
     }
-        const email = req.body.email;
-        const verificationCode = req.body.verification_code;
-		const verificationCodeType = req.body.verification_code_type;
 
-        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-            return res.status(400).send('InvalidEmailFormat');
-        }
-		
-		if (!/^\d+$/.test(verificationCode)) {
-		return res.status(400).send('InvalidVerificationCodeFormat');
-		}
+    const {
+      email,
+      verificationCode: verificationCode,
+      verificationCodeType: verificationCodeType,
+    } = value;
 
-        // Use a prepared statement to check verification code
-        const pool = await connAccount;
-        const request = pool.request();
-        request.input('Email', sql.VarChar, email);
-        request.input('VerificationCode', sql.VarChar, verificationCode);
-		request.input('VerificationCodeType', sql.VarChar, verificationCodeType);
-        const result = await request.execute('GetVerificationCode');
-        const row = result.recordset[0];
-
-        return res.status(200).send(row.Result);
-    } catch (error) {
-        logger.error('Database query failed: ' + error.message);
-        return res.status(500).send('A error ocourred. Please try again later.');
+    // Verify code with database
+    const verificationResult = await verifyCode(
+      email,
+      verificationCode,
+      verificationCodeType
+    );
+    if (verificationResult !== "ValidVerificationCode") {
+      logger.info(
+        `[Account] Verification failed for ${email}. Status: ${verificationResult}`
+      );
+      return res.status(200).json({
+        success: false,
+        result: verificationResult
+      });
     }
+    logger.info(
+      `[Account] Verification successful for ${email}. Status: ${verificationResult}`
+    );
+    return res.status(200).json({
+      success: true,
+      result: verificationResult,
+    });
+  } catch (error) {
+    logger.error(`Verification failed: ${error.message}`);
+    return res.status(500).json({
+      result: "ServerError",
+      message: "A server error occurred. Please try again later.",
+    });
+  }
 });
 
-module.exports = router;
+export default router;

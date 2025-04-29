@@ -1,9 +1,8 @@
 <?xml version="1.0" ?>
 
 <service>
-	<active_area country="usa" />
-
-	<area country="usa" auth_url="http://localhost:8070/serverApi/auth" billing_url="http://localhost:8080/serverApi/billing" billing_idc="10101" xtrap_use="0" server_mode="WAG" betazone="0" />
-	
-	<area country="chn" skip_auth="1" free_cash="1" skip_abuse_nick ="1" enc_xml_use ="1" billing_idc="10101" xtrap_use="0" server_mode="WAG" betazone="0" />
+	<active_area country="jpn" />
+	<area country="usa" auth_url="http://127.0.0.1:8070/Auth" billing_url="http://127.0.0.1:8070/Billing" billing_idc="10101" xtrap_use="0" server_mode="WAG" betazone="0" />
+	<area country="jpn" auth_url="http://127.0.0.1:8090/Auth" billing_url="http://127.0.0.1:8090/Billing/" skip_auth="0" skip_billing="0" free_cash="0" skip_abuse_nick="0" second_pass="0" betazone="0" server_mode="WAG" channel_limit_count="1" world_user_limit_count="100" billing_idc="10101" />
+	<area country="chn" skip_auth="1" free_cash="1" skip_abuse_nick ="1" billing_idc="10101" xtrap_use="0" server_mode="WAG" betazone="0" />
 </service>

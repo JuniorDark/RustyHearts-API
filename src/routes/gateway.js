@@ -1,58 +1,103 @@
-const express = require('express');
-const router = express.Router();
-const net = require('net');
-const { logger } = require('../utils/logger');
+import { Router } from 'express';
+const router = Router();
+import { Socket } from 'net';
+import config from '../config.js';
+const { ports, ips, logger } = config;
+import { create } from 'xmlbuilder2';
 
-// Define the gateway route
+// Constants
+const SOCKET_TIMEOUT = 2000;
+const GATEWAY_STATUS = {
+  ONLINE: 'online',
+  OFFLINE: 'offline'
+};
+
+/**
+ * Build XML response for gateway info
+ */
+function buildGatewayXml() {
+  return create({ version: '1.0', encoding: 'ISO-8859-1' })
+    .ele('network')
+      .ele('gateserver')
+        .att('ip', ips.gate)
+        .att('port', ports.gate)
+      .up()
+    .end({ prettyPrint: true });
+}
+
+/**
+ * Build gateway info route response
+ */
+function buildGatewayInfo(req) {
+  const baseUrl = `${req.protocol}://${req.headers.host}`;
+  return `1|${baseUrl}/launcher/GetGatewayAction|${baseUrl}/launcher/GetGatewayAction|`;
+}
+
+/**
+ * Check gateway server status via socket connection
+ */
+async function checkGatewayStatus() {
+  return new Promise((resolve) => {
+    const socket = new Socket();
+    socket.setTimeout(SOCKET_TIMEOUT);
+
+    socket.on('connect', () => {
+      socket.destroy();
+      resolve({ status: GATEWAY_STATUS.ONLINE });
+    });
+
+    socket.on('timeout', () => {
+      socket.destroy();
+      resolve({ status: GATEWAY_STATUS.OFFLINE, code: 408 });
+    });
+
+    socket.on('error', () => {
+      socket.destroy();
+      resolve({ status: GATEWAY_STATUS.OFFLINE, code: 503 });
+    });
+
+    socket.connect(ports.gate, ips.gate);
+  });
+}
+
+// Main gateway route
 router.get('/', (req, res) => {
-  const ip = process.env.GATESERVER_IP;
-  const port = process.env.GATESERVER_PORT || '50001';
-
-  // Generate the XML content with the IP and port values
-  const xml = `<?xml version="1.0" encoding="ISO-8859-1"?>
-    <network>
-      <gateserver ip="${ip}" port="${port}" />
-    </network>`;
-
-  res.set('Content-Type', 'application/xml');
-  
-  res.send(xml);
+  try {
+    res.set('Content-Type', 'application/xml');
+    res.send(buildGatewayXml());
+    logger.debug(`[Gateway] XML served to ${req.ip}`);
+  } catch (error) {
+    logger.error(`[Gateway] XML generation failed: ${error.message}`);
+    res.status(500).send('Internal Server Error');
+  }
 });
 
-// Define the gateway info route
+// Gateway info route
 router.get('/info', (req, res) => {
-  const gatewayRoute = `1|${req.protocol}://${req.headers.host}/serverApi/gateway|${req.protocol}://${req.headers.host}/serverApi/gateway|`;
-  res.send(gatewayRoute);
+  try {
+    res.send(buildGatewayInfo(req));
+    logger.debug(`[Gateway] Info served to ${req.ip}`);
+  } catch (error) {
+    logger.error(`[Gateway] Info generation failed: ${error.message}`);
+    res.status(500).send('Internal Server Error');
+  }
 });
 
-// Define the gateway status route
+// Gateway status route
 router.get('/status', async (req, res) => {
-  const ip = process.env.GATESERVER_IP;
-  const port = process.env.GATESERVER_PORT || '50001';
+  try {
+    const { status, code } = await checkGatewayStatus();
+    
+    logger[status === GATEWAY_STATUS.ONLINE ? 'info' : 'warn'](
+      `[Gateway] Status check from ${req.ip}: ${status}`
+    );
 
-  const timeout = 2000;
-
-  // Create a new socket and connect to the gateserver
-  const socket = new net.Socket();
-  socket.setTimeout(timeout);
-  socket.connect(port, ip);
-
-  // Handle the socket events to check the connection status
-  socket.on('connect', () => {
-    logger.info(`[Gateway] Connection attempt success from IP: ${req.ip}`);
-    res.status(200).json({ status: 'online' });
-    socket.destroy();
-  });
-  socket.on('timeout', () => {
-    logger.warn(`[Gateway] Connection attempt timeout from IP: ${req.ip}`);
-    res.status(408).json({ status: 'offline' });
-    socket.destroy();
-  });
-  socket.on('error', () => {
-    logger.error(`[Gateway] Connection failed from IP: ${req.ip}`);
-    res.status(503).json({ status: 'offline' });
-    socket.destroy();
-  });
+    res.status(status === GATEWAY_STATUS.ONLINE ? 200 : code || 503)
+       .json({ status });
+  } catch (error) {
+    logger.error(`[Gateway] Status check failed: ${error.message}`);
+    res.status(500).json({ status: GATEWAY_STATUS.OFFLINE });
+  }
 });
 
-module.exports = router;
+export default router;

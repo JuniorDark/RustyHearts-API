@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rusty Hearts - Account Management</title>
+    <link rel="stylesheet" href="/site/css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=MedievalSharp&family=Open+Sans:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <div class="left-panel">
+            <div class="logo-container">
+                <img src="/site/images/rh_logo.png" alt="Rusty Hearts Logo" class="logo">
+            </div>
+            <div class="game-description">
+                <h3>Join the Battle</h3>
+                <p>Experience a action hack'n'slash multiplayer online game with fast-paced and highly-stylized brawling combat combined with a solo or team-based dungeon exploration experience.</p>
+            </div>
+        </div>
+        
+        <div class="right-panel">
+            <div class="form-tabs">
+                <button class="tab-button active" data-tab="register">Create Account</button>
+                <button class="tab-button" data-tab="reset">Reset Password</button>
+            </div>
+            
+            <!-- Register Form -->
+            <div id="register-form" class="form-content active">
+                <form id="signupForm">
+                    <div class="form-group">
+                        <label for="userName">Username</label>
+                        <div class="input-with-icon">
+                            <i class="fas fa-user"></i>
+                            <input type="text" id="userName" name="userName" placeholder="6-16 alphanumeric characters" required>
+                        </div>
+                        <div class="error-message" id="userNameError"></div>
+                    </div>
+                    <div class="form-group">
+                        <label for="email">Email</label>
+                        <div class="input-with-icon">
+                            <i class="fas fa-envelope"></i>
+                            <input type="email" id="email" name="email" placeholder="your@email.com" required>
+                            <button type="button" id="sendVerificationBtn" class="verification-btn">Send Code</button>
+                        </div>
+                        <div class="error-message" id="emailError"></div>
+                    </div>
+                    <div class="form-group">
+                        <label for="verificationCode">Verification Code</label>
+                        <div class="input-with-icon">
+                            <i class="fas fa-shield-alt"></i>
+                            <input type="text" id="verificationCode" name="verificationCode" placeholder="Enter verification code" required>
+                        </div>
+                        <div class="error-message" id="verificationCodeError"></div>
+                    </div>
+                    <div class="form-group">
+                        <label for="password">Password</label>
+                        <div class="input-with-icon">
+                            <i class="fas fa-lock"></i>
+                            <input type="password" id="password" name="password" placeholder="8-16 characters" required>
+                        </div>
+                        <div class="error-message" id="passwordError"></div>
+                    </div>
+                    <div id="registerResponse" class="response-message"></div>
+                </form>
+            </div>
+            
+            <!-- Reset Password Form -->
+            <div id="reset-form" class="form-content">
+                <form id="resetPasswordForm">
+                    <div class="form-group">
+                        <label for="resetEmail">Email</label>
+                        <div class="input-with-icon">
+                            <i class="fas fa-envelope"></i>
+                            <input type="email" id="resetEmail" name="email" placeholder="your@email.com" required>
+                            <button type="button" id="sendResetVerificationBtn" class="verification-btn">Send Code</button>
+                        </div>
+                        <div class="error-message" id="resetEmailError"></div>
+                    </div>
+                    <div class="form-group">
+                        <label for="resetVerificationCode">Verification Code</label>
+                        <div class="input-with-icon">
+                            <i class="fas fa-shield-alt"></i>
+                            <input type="text" id="resetVerificationCode" name="verificationCode" placeholder="Enter verification code" required>
+                        </div>
+                        <div class="error-message" id="resetVerificationCodeError"></div>
+                    </div>
+                    <div class="form-group">
+                        <label for="newPassword">New Password</label>
+                        <div class="input-with-icon">
+                            <i class="fas fa-lock"></i>
+                            <input type="password" id="newPassword" name="password" placeholder="8-16 characters" required>
+                        </div>
+                        <div class="error-message" id="newPasswordError"></div>
+                    </div>
+                    <div class="form-group">
+                        <label for="confirmPassword">Confirm Password</label>
+                        <div class="input-with-icon">
+                            <i class="fas fa-lock"></i>
+                            <input type="password" id="confirmPassword" placeholder="Repeat your password" required>
+                        </div>
+                        <div class="error-message" id="confirmPasswordError"></div>
+                    </div>
+                    <div id="resetResponse" class="response-message"></div>
+                </form>
+            </div>
+            
+            <!-- Dynamic Footer -->
+            <div class="form-footer">
+                <div class="footer-content register-footer active">
+                    <button type="submit" form="signupForm" class="submit-btn">Create Account</button>
+                    <div class="footer-links">
+                        <div class="reset-link">
+                            Forgot password? <a href="#" class="switch-tab" data-tab="reset">Reset Password</a>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="footer-content reset-footer">
+                    <button type="submit" form="resetPasswordForm" class="submit-btn">Reset Password</button>
+                    <div class="footer-links">
+                        <div class="register-link">
+                            Need an account? <a href="#" class="switch-tab" data-tab="register">Create Account</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="/site/js/script.js"></script>
+</body>
+</html>

@@ -1,47 +1,96 @@
-const express = require('express');
-const router = express.Router();
-const NodeCache = require('node-cache');
-const { logger } = require('../utils/logger');
-const sql = require('mssql');
-const { authDBConfig } = require('../utils/dbConfig.js');
+import { Router } from 'express';
+import sql from 'mssql';
+const router = Router();
+import NodeCache from 'node-cache';
+import { logger } from '../utils/logger.js';
+import { authDBConfig } from '../utils/dbConfig.js';
+import { fetchOnlineCount } from "../services/authDBService.js";
 
-// Set up the cache
-const cache = new NodeCache({ stdTTL: 60, checkperiod: 120 });
+const CACHE_KEY = 'onlineCount';
+const CACHE_TTL = 60; // 1 minute
+const CHECK_PERIOD = 120; // 2 minutes
 
-// Route for getting the count of online players
+// Cache configuration
+const cache = new NodeCache({ 
+  stdTTL: CACHE_TTL, 
+  checkperiod: CHECK_PERIOD,
+  useClones: false
+});
+
+// Database connection pool
+let pool;
+let poolReady = (async () => {
+  try {
+    pool = await new sql.ConnectionPool(authDBConfig).connect();
+  } catch (error) {
+    logger.error('Failed to create database connection pool:', error);
+    process.exit(1);
+  }
+})();
+
+/**
+ * Gets online count, using cache when possible
+ */
+async function getOnlineCount() {
+  try {
+    // Try to get from cache first
+    let count = cache.get(CACHE_KEY);
+    
+    if (count === undefined) {
+      logger.debug('Cache miss for online count, querying database');
+      count = await fetchOnlineCount(pool);
+      cache.set(CACHE_KEY, count);
+    } else {
+      logger.debug('Online count retrieved from cache');
+    }
+    
+    return count;
+  } catch (error) {
+    // If we have a cached value, return it even if the query fails
+    const cached = cache.get(CACHE_KEY);
+    if (cached !== undefined) {
+      logger.warn('Using cached online count due to database error');
+      return cached;
+    }
+    throw error;
+  }
+}
+
+// Route for getting online players count
 router.get('/', async (req, res) => {
   try {
-    // Check if the count exists in the cache
-    const cacheKey = 'onlineCount';
-    let count = cache.get(cacheKey);
-
-    if (count === undefined) {
-      // Count not found in cache, fetch it from the database
-      const connAuth = new sql.ConnectionPool(authDBConfig);
-      await connAuth.connect();
-
-      const request = connAuth.request();
-
-      // Declare the @online parameter and set its value to 1
-      request.input('online', sql.Int, 1);
-
-      const result = await request.query('SELECT COUNT(*) AS OnlineCount FROM AuthTable WHERE online = @online');
-
-      count = result.recordset[0].OnlineCount;
-
-      // Store the count in the cache
-      cache.set(cacheKey, count);
-
-      // Close the database connection
-      await connAuth.close();
-    }
-
-    // Return the count as the response
-    return res.status(200).json({ count });
+    if (!pool) await poolReady;
+    
+    const count = await getOnlineCount();
+    
+    // Set cache-control headers
+    res.set('Cache-Control', `public, max-age=${CACHE_TTL}`);
+    
+    return res.status(200).json({ 
+      count,
+      cached: cache.has(CACHE_KEY),
+      timestamp: new Date().toISOString()
+    });
   } catch (error) {
-    logger.error('Database query failed: ' + error.message);
-    return res.status(500).send('Database query failed. Please try again later.');
+    logger.error('Failed to get online count:', error);
+    return res.status(500).json({ 
+      error: 'Internal server error',
+      message: 'Unable to retrieve online player count'
+    });
   }
 });
 
-module.exports = router;
+// Cleanup on process exit
+process.on('SIGINT', async () => {
+  try {
+    if (pool) {
+      await pool.close();
+    }
+    process.exit(0);
+  } catch (error) {
+    logger.error('Error closing connection pool:', error);
+    process.exit(1);
+  }
+});
+
+export default router;

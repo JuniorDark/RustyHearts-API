@@ -1,15 +1,17 @@
-const fs = require("fs");
-const winston = require("winston");
+import dotenv from 'dotenv';
+dotenv.config();
+import { existsSync, mkdirSync } from "fs";
+import { transports as _transports, format as _format, createLogger as _createLogger } from "winston";
 
 const logsDirectory = 'logs';
 
-if (!fs.existsSync(logsDirectory)) {
-  fs.mkdirSync(logsDirectory);
+if (!existsSync(logsDirectory)) {
+  mkdirSync(logsDirectory);
 }
 
 function createLogger(filename, level, filter, showConsole) {
   const transports = [
-    new winston.transports.File({ 
+    new _transports.File({ 
       filename: `${logsDirectory}/${filename}-${new Date().toISOString().slice(0, 10)}.log`, 
       level,
       filter
@@ -17,20 +19,20 @@ function createLogger(filename, level, filter, showConsole) {
   ];
 
   if (showConsole) {
-    transports.push(new winston.transports.Console({
-      format: winston.format.combine(
-        winston.format.colorize(),
-        winston.format.simple(),
-        winston.format.printf(info => `${info.level}: ${info.message} [${info.timestamp}]`)
+    transports.push(new _transports.Console({
+      format: _format.combine(
+        _format.colorize(),
+        _format.simple(),
+        _format.printf(info => `${info.level}: ${info.message} [${info.timestamp}]`)
       )
     }));
   }
 
-  const logger = winston.createLogger({
+  const logger = _createLogger({
     level,
-    format: winston.format.combine(
-      winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
-      winston.format.printf(info => `${info.level}: ${info.message} [${info.timestamp}] `)
+    format: _format.combine(
+      _format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
+      _format.printf(info => `${info.level}: ${info.message} [${info.timestamp}] `)
     ),
     transports
   });
@@ -46,7 +48,7 @@ const mailerLogger = createLogger('mailer', logLevel, log => log.message.include
 const accountLogger = createLogger('account', logLevel, log => log.message.includes('[Account]'), process.env.LOG_ACCOUNT_CONSOLE === 'true');
 const logger = createLogger('api', logLevel, null, true);
 
-module.exports = {
+export {
   authLogger,
   billingLogger,
   mailerLogger,

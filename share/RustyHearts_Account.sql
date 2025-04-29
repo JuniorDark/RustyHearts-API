@@ -1,21 +1,3 @@
-/*
- Navicat Premium Data Transfer
-
- Source Server         : RH VM
- Source Server Type    : SQL Server
- Source Server Version : 16001050
- Source Host           : 192.168.100.125:1433
- Source Catalog        : RustyHearts_Account
- Source Schema         : dbo
-
- Target Server Type    : SQL Server
- Target Server Version : 16001050
- File Encoding         : 65001
-
- Date: 12/05/2023 14:59:51
-*/
-
-
 -- ----------------------------
 -- Table structure for AccountTable
 -- ----------------------------
@@ -495,33 +477,40 @@ IF EXISTS (SELECT * FROM sys.all_objects WHERE object_id = OBJECT_ID(N'[dbo].[Cr
 GO
 
 CREATE PROCEDURE [dbo].[CreateAccount]
-    @WindyCode varchar(50),
-    @AccountPwd varchar(255),
-    @Email varchar(255),
-    @RegisterIP varchar(16)
+@WindyCode varchar(50),
+@AccountPwd varchar(255),
+@Email varchar(255),
+@RegisterIP varchar(16),
+@ServerId int,
+@ShopBalance Bigint
 AS
 BEGIN
     SET NOCOUNT ON;
 		
 		DECLARE @Result varchar(20)
-    DECLARE @AccountExists int;
+		DECLARE @EmailExists int;
+		DECLARE @UsernameExists int;
 		DECLARE @WindyCodeExists int;
 		
 		BEGIN TRY
 		BEGIN TRANSACTION
 
 
-    SELECT @AccountExists = COUNT(*) FROM AccountTable
-    WHERE WindyCode = @WindyCode OR Email = @Email;
+		SELECT @EmailExists = COUNT(*) FROM AccountTable
+		WHERE Email = @Email;
+		SELECT @UsernameExists = COUNT(*) FROM AccountTable
+		WHERE WindyCode = @WindyCode;
 		SELECT @WindyCodeExists = COUNT(*) FROM RustyHearts_Auth.dbo.AuthTable
-    WHERE WindyCode = @WindyCode;
+		WHERE WindyCode = @WindyCode;
 
 
 -- Check if account exists
-         IF @AccountExists > 0
-        SET @Result = 'AccountExists';
-				ELSE IF @WindyCodeExists > 0
-        SET @Result = 'WindyCodeExists';
+        IF @EmailExists > 0
+        SET @Result = 'EmailExists';
+		ELSE IF @UsernameExists > 0
+        SET @Result = 'UsernameExists';
+		ELSE IF @WindyCodeExists > 0
+        SET @Result = 'UsernameExists';
         ELSE 
         SET @Result = 'NewUser';
 
@@ -535,7 +524,7 @@ BEGIN
     VALUES (@WindyCode, 0, NEWID(), 0, '0', GETDATE(), GETDATE(), GETDATE(), @RegisterIP, 0, 0, 0, 0, 0, 5, 1, 0, 1, 0, 0, '00-00-00-00-00-00', '00-00-00-00-00-00', '00-00-00-00-00-00', '');
 		
 		INSERT INTO CashTable (WindyCode, WorldId, Zen)
-    VALUES (@WindyCode, 10101, 0);
+    VALUES (@WindyCode, @ServerId, @ShopBalance);
 		
 		
 		SET @Result = 'AccountCreated';
@@ -664,10 +653,13 @@ BEGIN
 
 
 -- Check if account exists
-         IF @AccountExists > 0
-        SET @Result = 'AccountExists';
-        ELSE 
-        SET @Result = 'AccountDontExists';
+IF @AccountExists > 0
+BEGIN
+    SET @Result = 'AccountExists';
+    COMMIT TRANSACTION;
+    SELECT @Result as Result;
+    RETURN;
+END
 
     IF @Result = 'AccountDontExists' 
      -- Retrieve count of existing verification codes for the user

@@ -1,6 +1,5 @@
-const sql = require('mssql');
-const env = require('./env');
-const { logger } = require('../utils/logger');
+import sql from 'mssql';
+import { logger } from '../utils/logger.js';
 
 const dbConfig = {
   user: process.env.DB_USER,
@@ -32,7 +31,7 @@ const authDBConfig = {
   },
 };
 
-module.exports = {
+export {
   connAccount,
   authDBConfig
 };
