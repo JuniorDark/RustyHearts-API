@@ -1,9 +1,9 @@
 name: Create Release and Upload Assets
 
 on:
-  push:
-    tags:
-      - "v*"
+  workflow_dispatch:
+  release:
+    types: [created]
 
 jobs:
   release:
